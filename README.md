@@ -81,7 +81,7 @@ For this, use `Wisp.use_state_machine()`. This will return a `StateMachine`
 object.
 
 ```gdscript
-`func use_state_machine(owner: Node, initial_state: State) -> StateMachine`
+func use_state_machine(owner: Node, initial_state: State) -> StateMachine
 ```
 
 Example:
@@ -105,7 +105,7 @@ func _input(event):
 	state_machine.input(event)
 ```
 
-Feel free to opt out of using calling any of these functions if you don't need
+Feel free to opt out of calling any of these functions if you don't need
 to.
 
 ## API
