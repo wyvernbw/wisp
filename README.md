@@ -149,3 +149,9 @@ called every input event, returns a state to transition to
 ```gdscript
 func wisp_input(owner: Node, event: InputEvent) -> State
 ```
+
+## Roadmap
+
+- [x] Basic state logic
+- [x] Concurrency
+- [ ] pushdown automata
