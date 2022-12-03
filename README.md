@@ -1,4 +1,6 @@
-# 🔥 wisp
+# <img src="./icon.gif" style="image-rendering: pixelated"></img> wisp
+
+(sprite from Terraria)
 
 **Wisp** is a very minimal
 script (<100 lines) for all your state machine logic:
