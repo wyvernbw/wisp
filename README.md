@@ -1,7 +1,7 @@
 # 🔥 wisp
 
 **Wisp** is a very minimal
-script (<100 lines) made with some goals in mind:
+script (<100 lines) for all your state machine logic:
 
 - **Easy to use**: You can create a state machine in a few lines of code
 - **Concurrent**: You can have multiple state machines running at the same time
