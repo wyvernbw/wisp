@@ -1,2 +1,2 @@
-# wisp
-🔥A godot script for handling state machines quickly
+# 🔥 wisp
+A godot script for handling state machines quickly
