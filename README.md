@@ -1,6 +1,5 @@
 # 🔥 wisp
 
-A godot script for handling state machines quickly  
 **Wisp** is a very minimal
 script (<100 lines) made with some goals in mind:
 
