@@ -47,5 +47,5 @@ class StateMachine:
 		if new_state != current_state:
 			transition(new_state)
 		
-func use_state_machine(owner: Node, initial_state: State) -> StateMachine:
+static func use_state_machine(owner: Node, initial_state: State) -> StateMachine:
 	return StateMachine.create(owner, initial_state)
