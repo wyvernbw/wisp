@@ -87,7 +87,7 @@ func use_state_machine(owner: Node, initial_state: State) -> StateMachine
 Example:
 
 ```gdscript
-onready var state_machine = Wisp.use_state_machine(self, IdleState)
+onready var state_machine = Wisp.use_state_machine(self, IdleState.new())
 ```
 
 then, in your `_process()`, `_physics_process()`, or `_input()` functions,
