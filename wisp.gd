@@ -4,16 +4,16 @@ extends Node
 
 class State:
 	var name = ""
-	func enter(owner) -> void:
+	func enter(owner: Node) -> void:
 		pass
-	func exit(owner) -> void:
+	func exit(owner: Node) -> void:
 		pass
 
-	func wisp_process(owner, delta) -> State:
+	func wisp_process(owner: Node, delta: float) -> State:
 		return self
-	func wisp_physics_process(owner, delta) -> State:
+	func wisp_physics_process(owner: Node, delta: InputEvent) -> State:
 		return self
-	func wisp_input(owner, event) -> State:
+	func wisp_input(owner: Node, event: InputEvent) -> State:
 		return self
 
 class StateMachine:
@@ -34,15 +34,15 @@ class StateMachine:
 		new_state.enter(owner)
 		current_state = new_state
 
-	func process(delta) -> void:
+	func process(delta: float) -> void:
 		var new_state = current_state.wisp_process(owner, delta)
 		if new_state != current_state:
 			transition(new_state)	
-	func physics_process(delta) -> void:
+	func physics_process(delta: float) -> void:
 		var new_state = current_state.wisp_physics_process(owner, delta)
 		if new_state != current_state:
 			transition(new_state)
-	func input(event) -> void:
+	func input(event: InputEvent) -> void:
 		var new_state = current_state.wisp_input(owner, event)
 		if new_state != current_state:
 			transition(new_state)
