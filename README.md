@@ -14,8 +14,15 @@ script (<100 lines) for all your state machine logic:
 
 In your project folder, run:
 
-```
+```bash
 git submodule add https://github.com/wyvernbw/wisp
+```
+
+If you are using godot 4, run these commands after cloning the repo:
+
+```bash
+cd wisp # or wherever you cloned the repo
+git switch @godot4
 ```
 
 done. You can now use the script in your project. Otherwise, you can just copy
