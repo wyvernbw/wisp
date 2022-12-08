@@ -11,7 +11,7 @@ class State:
 
 	func wisp_process(owner: Node, delta: float) -> State:
 		return self
-	func wisp_physics_process(owner: Node, delta: InputEvent) -> State:
+	func wisp_physics_process(owner: Node, delta: float) -> State:
 		return self
 	func wisp_input(owner: Node, event: InputEvent) -> State:
 		return self
