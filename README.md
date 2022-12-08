@@ -82,6 +82,16 @@ class ExampleState extends Wisp.State:
 		return self
 ```
 
+For the [enter](#enter) and [exit](#exit) functions, you cannot return a state, but you can emit the `transition` signal.
+
+```gdscript
+class ExampleState extends Wisp.State:
+	func enter(owner: Node) -> void:
+		# do stuff
+		yield(get_tree().create_timer(1), "timeout")
+		emit_signal("transition", JumpState.new())
+```
+
 #### Creating a state machine
 
 For this, use `Wisp.use_state_machine()`. This will return a `StateMachine`
