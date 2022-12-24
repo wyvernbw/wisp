@@ -35,9 +35,9 @@ class StateMachine:
 	func transition(new_state: State) -> void:
 		current_state.disconnect('transition', self, 'transition')
 		current_state.exit(owner)
-		new_state.connect('transition', self, 'transition')
-		new_state.enter(owner)
 		current_state = new_state
+		current_state.connect('transition', self, 'transition')
+		current_state.enter(owner)
 
 	func process(delta: float) -> void:
 		var new_state = current_state.wisp_process(owner, delta)
