@@ -133,10 +133,10 @@ to.
 
 #### enter
 
-called when entering the state
+called when entering the state, returns a state to transition to, supports `yield`
 
 ```gdscript
-func enter(owner: Node) -> void
+func enter(owner: Node) -> State
 ```
 
 #### exit
