@@ -82,14 +82,16 @@ class ExampleState extends Wisp.State:
 		return self
 ```
 
-For the [enter](#enter) and [exit](#exit) functions, you cannot return a state, but you can emit the `transition` signal.
+[enter](#enter) also supports returning a new state. You can also use `yield` to wait before transitioning. This is useful for states that will always transition to a new state after a certain amount of time.
+**WARNING**: returning a new instance of the same class will cause an infinite loop and crash your game!
+_NOTE_: before, you could use the 'transition' signal to transition to a new state. While this is still supported, it is recommended to use the return value instead.
 
 ```gdscript
 class ExampleState extends Wisp.State:
 	func enter(owner: Node) -> void:
 		# do stuff
 		yield(get_tree().create_timer(1), "timeout")
-		emit_signal("transition", JumpState.new())
+		return JumpState.new()
 ```
 
 #### Creating a state machine
