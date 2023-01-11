@@ -30,7 +30,8 @@ class StateMachine:
 	func disable() -> void:
 		if current_state == null:
 			return
-		current_state.disconnect('transition', self, 'transition')
+		# current_state.disconnect('transition', self, 'transition')
+		current_state.transition.disconnect(self.transition)
 		current_state.exit(owner)
 		current_state = null
 		disabled = true
@@ -38,25 +39,29 @@ class StateMachine:
 	func enable(state: State) -> void:
 		disabled = false
 		current_state = state
-		current_state.connect('transition', self, 'transition')
+		# current_state.connect('transition', self, 'transition')
+		current_state.transition.connect(self.transition)
 		current_state.enter(owner)
 
 	func _init(new_owner: Node, state: State) -> void:
 		current_state = state
 		owner = new_owner
-		current_state.connect('transition', self, 'transition')
+		# current_state.connect('transition', self, 'transition')
+		current_state.transition.connect(self.transition)
 		current_state.enter(owner)
 
 	func transition(new_state: State) -> void:
 		if disabled or current_state == null:
 			return
-		current_state.disconnect('transition', self, 'transition')
+		# current_state.disconnect('transition', self, 'transition')
+		current_state.transition.disconnect(self.transition)
 		current_state.exit(owner)
 		current_state = new_state
-		current_state.connect('transition', self, 'transition')
+		# current_state.connect('transition', self, 'transition')
+		current_state.transition.connect(self.transition)
 		var res = current_state.enter(owner)
-		if res is GDScriptFunctionState:
-			res = yield(res, 'completed')
+		# res = yield(res, 'completed')
+		res = await res.completed
 		if not res == current_state:
 			transition(res)
 
