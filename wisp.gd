@@ -59,9 +59,8 @@ class StateMachine:
 		current_state = new_state
 		# current_state.connect('transition', self, 'transition')
 		current_state.transition.connect(self.transition)
-		var res = current_state.enter(owner)
+		var res = await current_state.enter(owner)
 		# res = yield(res, 'completed')
-		res = await res.completed
 		if not res == current_state:
 			transition(res)
 
