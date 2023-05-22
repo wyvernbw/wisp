@@ -48,6 +48,7 @@ class StateMachine:
 		current_state.enter(owner)
 
 	func transition(new_state: State) -> void:
+		yield(owner.get_tree(), 'idle_frame')
 		if disabled or current_state == null:
 			return
 		current_state.disconnect('transition', self, 'transition')
@@ -61,21 +62,23 @@ class StateMachine:
 			transition(res)
 
 	func process(delta: float) -> void:
-		if current_state == null:
+		if current_state == null or disabled:
 			return
 		var new_state = current_state.wisp_process(owner, delta)
 		if new_state != current_state:
 			transition(new_state)	
 	func physics_process(delta: float) -> void:
-		if current_state == null:
+		if current_state == null or disabled: 
 			return
 		var new_state = current_state.wisp_physics_process(owner, delta)
 		if new_state != current_state:
 			transition(new_state)
 	func input(event: InputEvent) -> void:
-		if current_state == null:
+		if current_state == null or disabled:
 			return
 		var new_state = current_state.wisp_input(owner, event)
+		if new_state is GDScriptFunctionState:
+			new_state = yield(new_state, 'completed')
 		if new_state != current_state:
 			transition(new_state)
 	func debug() -> String:
