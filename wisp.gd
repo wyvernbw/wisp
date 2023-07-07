@@ -17,8 +17,13 @@ class State:
 		return self
 	func wisp_input(owner: Node, event: InputEvent) -> State:
 		return self
+	func use_transition(new_state: State) -> Callable:
+		return func() -> void:
+			transition.emit(new_state)
 
 class StateMachine:
+	signal state_changed(state)
+
 	var current_state: State
 	var owner: Node
 	var disabled: bool = false
@@ -59,6 +64,7 @@ class StateMachine:
 		current_state = new_state
 		# current_state.connect('transition', self, 'transition')
 		current_state.transition.connect(self.transition)
+		state_changed.emit(current_state)
 		var res = await current_state.enter(owner)
 		# res = yield(res, 'completed')
 		if not res == current_state:
