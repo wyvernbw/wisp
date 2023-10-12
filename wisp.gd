@@ -3,19 +3,21 @@ class_name Wisp
 extends Node
 
 class State:
+	extends RefCounted
+
 	signal transition(state)
 
-	var name = ""
-	func enter(owner: Node) -> Wisp.State:
+	func name() -> String:
+		return "unnamed"
+	func enter(owner) -> Wisp.State:
 		return self
-	func exit(owner: Node) -> void:
+	func exit(owner) -> void:
 		pass
-
-	func wisp_process(owner: Node, delta: float) -> State:
+	func process(owner, delta: float) -> State:
 		return self
-	func wisp_physics_process(owner: Node, delta: float) -> State:
+	func physics_process(owner, delta: float) -> State:
 		return self
-	func wisp_input(owner: Node, event: InputEvent) -> State:
+	func input(owner, event: InputEvent) -> State:
 		return self
 	func use_transition(new_state: State) -> Callable:
 		return func() -> void:
