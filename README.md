@@ -5,10 +5,10 @@
 **Wisp** is a very minimal
 script (<100 lines) for all your state machine logic:
 
-- **Easy to use**: You can create a state machine in a few lines of code
-- **Concurrent**: You can have multiple state machines running at the same time
-- **Minimal**: as little overhead as possible and easy to install
-- **Full Control**: your classes, your code, your game
+-   **Easy to use**: You can create a state machine in a few lines of code
+-   **Concurrent**: You can have multiple state machines running at the same time
+-   **Minimal**: as little overhead as possible and easy to install
+-   **Full Control**: your classes, your code, your game
 
 ## Install
 
@@ -22,7 +22,7 @@ If you are using godot 4, run these commands after cloning the repo:
 
 ```bash
 cd wisp # or wherever you cloned the repo
-git switch @godot4
+git switch godot4
 ```
 
 done. You can now use the script in your project. Otherwise, you can just copy
@@ -30,16 +30,6 @@ the script into a new file in your project.
 
 ## Usage
 
-- [Getting Started](#getting-started)
-  - [Defining States](#defining-states)
-  - [Creating a State Machine](#creating-a-state-machine)
-- [API](#api)
-  - [State](#state)
-    - [enter](#enter)
-    - [exit](#exit)
-    - [wisp_process](#wisp_process)
-    - [wisp_physics_process](#wisp_physics_process)
-    - [wisp_input](#wisp_input)
 
 ### Get started
 
@@ -52,25 +42,16 @@ States are just classes that inherit from `Wisp.State`.
 class_name Player
 extends KinematicBody2D
 
-class IdleState extends Wisp.State:
-	func _enter():
-		print("Entering Idle State")
-```
-
-or
-
-```gdscript
-# IdleState.gd
-class_name IdleState
-extends Wisp.State
-
-func _enter():
-	print("Entering Idle State")
+class IdleState:
+	extends Wisp.State	
+	
+	func enter(owner: Player):
+		print("Entering Idle State", owner)
 ```
 
 The [enter](#enter) and [exit](#exit) functions are called when transitioning states.
 
-Note that the [wisp_process](#wisp_process), [wisp_physics_process](#wisp_physics_process), and [wisp_input](#wisp_input) functions
+Note that the [process](#process), [physics_process](#physics_process), and [input](#input) functions
 all return a state to transition to. If you want to stay in the same state,
 return `self`.
 
@@ -147,32 +128,32 @@ called when exiting the state
 func exit(owner: Node) -> void
 ```
 
-#### wisp_process
+#### process
 
 called every frame, returns a state to transition to
 
 ```gdscript
-func wisp_process(owner: Node, delta: float) -> State
+func process(owner: Node, delta: float) -> State
 ```
 
-#### wisp_physics_process
+#### physics_process
 
 called every physics frame, returns a state to transition to
 
 ```gdscript
-func wisp_physics_process(owner: Node, delta: float) -> State
+func physics_process(owner: Node, delta: float) -> State
 ```
 
-#### wisp_input
+#### input
 
 called every input event, returns a state to transition to
 
 ```gdscript
-func wisp_input(owner: Node, event: InputEvent) -> State
+func input(owner: Node, event: InputEvent) -> State
 ```
 
 ## Roadmap
 
-- [x] Basic state logic
-- [x] Concurrency
-- [ ] pushdown automata
+-   [x] Basic state logic
+-   [x] Concurrency
+-   [ ] pushdown automata
