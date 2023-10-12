@@ -24,14 +24,16 @@ class State:
 			transition.emit(new_state)
 
 class StateMachine:
+	extends Node
+
 	signal state_changed(state)
 
 	var current_state: State
-	var owner: Node
+	var target: Node
 	var disabled: bool = false
 
-	static func create(new_owner: Node, initial_state: State) -> StateMachine:
-		var sm = StateMachine.new(new_owner, initial_state)
+	static func create(new_target: Node, initial_state: State) -> StateMachine:
+		var sm = StateMachine.new(new_target, initial_state)
 		return sm
 
 	func disable() -> void:
@@ -39,7 +41,7 @@ class StateMachine:
 			return
 		# current_state.disconnect('transition', self, 'transition')
 		current_state.transition.disconnect(self.transition)
-		current_state.exit(owner)
+		current_state.exit(target)
 		current_state = null
 		disabled = true
 
@@ -48,26 +50,26 @@ class StateMachine:
 		current_state = state
 		# current_state.connect('transition', self, 'transition')
 		current_state.transition.connect(self.transition)
-		current_state.enter(owner)
+		current_state.enter(target)
 
-	func _init(new_owner: Node, state: State) -> void:
+	func _init(new_target: Node, state: State) -> void:
 		current_state = state
-		owner = new_owner
+		target = new_target
 		# current_state.connect('transition', self, 'transition')
 		current_state.transition.connect(self.transition)
-		current_state.enter(owner)
+		current_state.enter(target)
 
 	func transition(new_state: State) -> void:
 		if disabled or current_state == null:
 			return
 		# current_state.disconnect('transition', self, 'transition')
 		current_state.transition.disconnect(self.transition)
-		current_state.exit(owner)
+		current_state.exit(target)
 		current_state = new_state
 		# current_state.connect('transition', self, 'transition')
 		current_state.transition.connect(self.transition)
 		state_changed.emit(current_state)
-		var res = await current_state.enter(owner)
+		var res = await current_state.enter(target)
 		# res = yield(res, 'completed')
 		if not res == current_state:
 			transition(res)
@@ -75,19 +77,19 @@ class StateMachine:
 	func process(delta: float) -> void:
 		if current_state == null:
 			return
-		var new_state = current_state.wisp_process(owner, delta)
+		var new_state = current_state.wisp_process(target, delta)
 		if new_state != current_state:
 			transition(new_state)	
 	func physics_process(delta: float) -> void:
 		if current_state == null:
 			return
-		var new_state = current_state.wisp_physics_process(owner, delta)
+		var new_state = current_state.wisp_physics_process(target, delta)
 		if new_state != current_state:
 			transition(new_state)
 	func input(event: InputEvent) -> void:
 		if current_state == null:
 			return
-		var new_state = current_state.wisp_input(owner, event)
+		var new_state = current_state.wisp_input(target, event)
 		if new_state != current_state:
 			transition(new_state)
 	func debug() -> String:
