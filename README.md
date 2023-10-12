@@ -5,10 +5,10 @@
 **Wisp** is a very minimal
 script (<100 lines) for all your state machine logic:
 
-- **Easy to use**: You can create a state machine in a few lines of code
-- **Concurrent**: You can have multiple state machines running at the same time
-- **Minimal**: as little overhead as possible and easy to install
-- **Full Control**: your classes, your code, your game
+-   **Easy to use**: You can create a state machine in a few lines of code
+-   **Concurrent**: You can have multiple state machines running at the same time
+-   **Minimal**: as little overhead as possible and easy to install
+-   **Full Control**: your classes, your code, your game
 
 ## Install
 
@@ -22,7 +22,7 @@ If you are using godot 4, run these commands after cloning the repo:
 
 ```bash
 cd wisp # or wherever you cloned the repo
-git switch @godot4
+git switch godot4
 ```
 
 done. You can now use the script in your project. Otherwise, you can just copy
@@ -30,149 +30,113 @@ the script into a new file in your project.
 
 ## Usage
 
-- [Getting Started](#getting-started)
-  - [Defining States](#defining-states)
-  - [Creating a State Machine](#creating-a-state-machine)
-- [API](#api)
-  - [State](#state)
-    - [enter](#enter)
-    - [exit](#exit)
-    - [wisp_process](#wisp_process)
-    - [wisp_physics_process](#wisp_physics_process)
-    - [wisp_input](#wisp_input)
+### Getting Started
 
-### Get started
-
-#### Defining States
-
-States are just classes that inherit from `Wisp.State`.
+First, create a new class that extends Wisp.State, either as an inner class or a new file:
 
 ```gdscript
-# Player.gd
-class_name Player
-extends KinematicBody2D
+class Idle:
+	extends Wisp.State
 
-class IdleState extends Wisp.State:
-	func _enter():
-		print("Entering Idle State")
-```
+	# It's a good idea to define this function
+	func name() -> String:
+		return "idle"
 
-or
+	func enter(owner: Player) -> Wisp.State:
+		print(owner, " entered idle")
+		return self
 
-```gdscript
-# IdleState.gd
-class_name IdleState
-extends Wisp.State
-
-func _enter():
-	print("Entering Idle State")
-```
-
-The [enter](#enter) and [exit](#exit) functions are called when transitioning states.
-
-Note that the [wisp_process](#wisp_process), [wisp_physics_process](#wisp_physics_process), and [wisp_input](#wisp_input) functions
-all return a state to transition to. If you want to stay in the same state,
-return `self`.
-
-```gdscript
-class ExampleState extends Wisp.State:
-	func wisp_input(owner: Node, event: InputEvent) -> Wisp.State:
-		if event.is_action_pressed("jump"):
-			return JumpState.new()
+	func process(owner: Player, delta: float) -> Wisp.State:
+		# do stuff
 		return self
 ```
 
-[enter](#enter) also supports returning a new state. You can also use `yield` to wait before transitioning. This is useful for states that will always transition to a new state after a certain amount of time.
-**WARNING**: returning a new instance of the same class will cause an infinite loop and crash your game!
-_NOTE_: before, you could use the 'transition' signal to transition to a new state. While this is still supported, it is recommended to use the return value instead.
+Then, create a new state machine in your main class:
 
 ```gdscript
-class ExampleState extends Wisp.State:
-	func enter(owner: Node) -> void:
-		# do stuff
-		yield(get_tree().create_timer(1), "timeout")
-		return JumpState.new()
+class_name Player
+extends CharacterBody2D
+
+var state_machine := Wisp.use_state_machine(self, Idle.new())
 ```
 
-#### Creating a state machine
-
-For this, use `Wisp.use_state_machine()`. This will return a `StateMachine`
-object.
+Finally, call the state machine methods from your main class:
 
 ```gdscript
-func use_state_machine(owner: Node, initial_state: State) -> StateMachine
-```
-
-Example:
-
-```gdscript
-onready var state_machine = Wisp.use_state_machine(self, IdleState)
-```
-
-then, in your `_process()`, `_physics_process()`, or `_input()` functions,
-simply call `state_machine.process()`, `state_machine.physics_process()`, or
-`state_machine.input()`, respectively.
-
-```gdscript
-func _process(delta):
+func _process(delta: float) -> void:
 	state_machine.process(delta)
 
-func _physics_process(delta):
+func _physics_process(delta: float) -> void:
 	state_machine.physics_process(delta)
 
-func _input(event):
+func _input(event: InputEvent) -> void:
 	state_machine.input(event)
 ```
 
-Feel free to opt out of calling any of these functions if you don't need
-to.
+### `State` Class
 
-## API
+The `State` class is a base class for defining game states in your project. You can create custom state classes by extending this class and implementing the necessary methods.
 
-### State
+#### Properties and Methods
 
-#### enter
+-   `signal transition(state)`: A signal emitted when a state transition occurs.
 
-called when entering the state, returns a state to transition to, supports `yield`
+-   `func name() -> String`: Returns the name of the state.
 
-```gdscript
-func enter(owner: Node) -> State
-```
+-   `func enter(owner) -> Wisp.State`: Called when a state is entered.
 
-#### exit
+-   `func exit(owner) -> void`: Called when a state is exited.
 
-called when exiting the state
+-   `func process(owner, delta: float) -> State`: Called during the main game loop.
 
-```gdscript
-func exit(owner: Node) -> void
-```
+-   `func physics_process(owner, delta: float) -> State`: Called during the physics process.
 
-#### wisp_process
+-   `func input(owner, event: InputEvent) -> State`: Called when input events occur.
 
-called every frame, returns a state to transition to
+-   `func use_transition(new_state: State) -> Callable`: Returns a callable function to transition to a new state.
 
-```gdscript
-func wisp_process(owner: Node, delta: float) -> State
-```
+### `StateMachine` Class
 
-#### wisp_physics_process
+The `StateMachine` class manages the current state and facilitates state transitions.
 
-called every physics frame, returns a state to transition to
+#### Properties and Methods
 
-```gdscript
-func wisp_physics_process(owner: Node, delta: float) -> State
-```
+-   `signal state_changed(state)`: A signal emitted when the state changes.
 
-#### wisp_input
+-   `var current_state: State`: The currently active state.
 
-called every input event, returns a state to transition to
+-   `var target: Node`: The target object associated with the state machine.
 
-```gdscript
-func wisp_input(owner: Node, event: InputEvent) -> State
-```
+-   `var disabled: bool = false`: A flag to disable the state machine.
+
+-   `static func create(new_target: Node, initial_state: State) -> StateMachine`: A static factory method to create a new `StateMachine` instance.
+
+-   `func disable() -> void`: Disables the state machine.
+
+-   `func enable(state: State) -> void`: Enables the state machine with a specified initial state.
+
+-   `func _init(new_target: Node, state: State) -> void`: Initializes the state machine.
+
+-   `func transition(new_state: State) -> void`: Initiates a state transition.
+
+-   `func process(delta: float) -> void`: Handles the main game loop processing.
+
+-   `func physics_process(delta: float) -> void`: Handles physics processing.
+
+-   `func input(event: InputEvent) -> void`: Handles input events.
+
+-   `func debug() -> String`: Returns a debug string indicating the current state or "disabled" if the state machine is disabled.
+
+### `use_state_machine` Function
+
+A static function to create and set up a `StateMachine` for a specific owner object with an initial state.
 
 ## Roadmap
 
-- [x] Basic state logic
-- [x] Concurrency
-- [ ] pushdown automata
+-   [x] Basic state logic
+-   [x] Concurrency
+-   [ ] pushdown automata
+
+```
+
+```
