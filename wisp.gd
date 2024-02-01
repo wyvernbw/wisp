@@ -6,16 +6,16 @@ class State:
 	signal transition(state)
 
 	var name = ""
-	func enter(owner: Node) -> Wisp.State:
+	func enter(owner) -> Wisp.State:
 		return self
-	func exit(owner: Node) -> void:
+	func exit(owner) -> void:
 		pass
 
-	func wisp_process(owner: Node, delta: float) -> State:
+	func wisp_process(owner, delta: float) -> State:
 		return self
-	func wisp_physics_process(owner: Node, delta: float) -> State:
+	func wisp_physics_process(owner, delta: float) -> State:
 		return self
-	func wisp_input(owner: Node, event: InputEvent) -> State:
+	func wisp_input(owner, event: InputEvent) -> State:
 		return self
 
 class StateMachine:
