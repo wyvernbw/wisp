@@ -6,17 +6,21 @@ class State:
 	signal transition(state)
 
 	var name = ""
-	func enter(owner: Node) -> Wisp.State:
+	func enter(owner) -> Wisp.State:
 		return self
-	func exit(owner: Node) -> void:
+	func exit(owner) -> void:
 		pass
 
-	func wisp_process(owner: Node, delta: float) -> State:
+	func wisp_process(owner, delta: float) -> State:
 		return self
-	func wisp_physics_process(owner: Node, delta: float) -> State:
+	func wisp_physics_process(owner, delta: float) -> State:
 		return self
-	func wisp_input(owner: Node, event: InputEvent) -> State:
+	func wisp_input(owner, event: InputEvent) -> State:
 		return self
+
+class DisabledState extends State:
+	func _init():
+		name = "Disabled"
 
 class StateMachine:
 	var current_state: State
@@ -28,11 +32,11 @@ class StateMachine:
 		return sm
 
 	func disable() -> void:
-		if current_state == null:
+		if current_state is DisabledState:
 			return
 		current_state.disconnect('transition', self, 'transition')
 		current_state.exit(owner)
-		current_state = null
+		current_state = DisabledState.new()
 		disabled = true
 
 	func enable(state: State) -> void:
@@ -49,7 +53,7 @@ class StateMachine:
 
 	func transition(new_state: State) -> void:
 		yield(owner.get_tree(), 'idle_frame')
-		if disabled or current_state == null:
+		if disabled or current_state is DisabledState:
 			return
 		current_state.disconnect('transition', self, 'transition')
 		current_state.exit(owner)
@@ -62,19 +66,19 @@ class StateMachine:
 			transition(res)
 
 	func process(delta: float) -> void:
-		if current_state == null or disabled:
+		if current_state is DisabledState or disabled:
 			return
 		var new_state = current_state.wisp_process(owner, delta)
 		if new_state != current_state:
 			transition(new_state)	
 	func physics_process(delta: float) -> void:
-		if current_state == null or disabled: 
+		if current_state is DisabledState or disabled: 
 			return
 		var new_state = current_state.wisp_physics_process(owner, delta)
 		if new_state != current_state:
 			transition(new_state)
 	func input(event: InputEvent) -> void:
-		if current_state == null or disabled:
+		if current_state is DisabledState or disabled:
 			return
 		var new_state = current_state.wisp_input(owner, event)
 		if new_state is GDScriptFunctionState:
