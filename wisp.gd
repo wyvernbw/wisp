@@ -23,6 +23,8 @@ class DisabledState extends State:
 		name = "Disabled"
 
 class StateMachine:
+	signal pretransition(new_state)
+
 	var current_state: State
 	var owner: Node
 	var disabled: bool = false
@@ -51,10 +53,12 @@ class StateMachine:
 		current_state.connect('transition', self, 'transition')
 		current_state.enter(owner)
 
-	func transition(new_state: State) -> void:
-		yield(owner.get_tree(), 'idle_frame')
+	func transition(new_state: State, use_yield: bool = true) -> void:
+		if use_yield:
+			yield(owner.get_tree(), 'idle_frame')
 		if disabled or current_state is DisabledState:
 			return
+		emit_signal('pretransition', new_state)
 		current_state.disconnect('transition', self, 'transition')
 		current_state.exit(owner)
 		current_state = new_state
@@ -63,7 +67,7 @@ class StateMachine:
 		if res is GDScriptFunctionState:
 			res = yield(res, 'completed')
 		if not res == current_state:
-			transition(res)
+			transition(res, false)
 
 	func process(delta: float) -> void:
 		if current_state is DisabledState or disabled:
