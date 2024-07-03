@@ -17,6 +17,8 @@ class State:
 		return self
 	func wisp_input(owner, event: InputEvent) -> State:
 		return self
+	func wisp_unhandled_input(owner, event: InputEvent) -> State:
+		return self
 
 class DisabledState extends State:
 	func _init():
@@ -27,7 +29,6 @@ class StateMachine:
 
 	var current_state: State
 	var owner: Node
-	var disabled: bool = false
 
 	static func create(new_owner: Node, initial_state: State) -> StateMachine:
 		var sm = StateMachine.new(new_owner, initial_state)
@@ -39,10 +40,8 @@ class StateMachine:
 		current_state.disconnect('transition', self, 'transition')
 		current_state.exit(owner)
 		current_state = DisabledState.new()
-		disabled = true
 
 	func enable(state: State) -> void:
-		disabled = false
 		current_state = state
 		current_state.connect('transition', self, 'transition')
 		current_state.enter(owner)
@@ -56,7 +55,7 @@ class StateMachine:
 	func transition(new_state: State, use_yield: bool = true) -> void:
 		if use_yield:
 			yield(owner.get_tree(), 'idle_frame')
-		if disabled or current_state is DisabledState:
+		if current_state is DisabledState:
 			return
 		emit_signal('pretransition', new_state)
 		current_state.disconnect('transition', self, 'transition')
@@ -64,33 +63,45 @@ class StateMachine:
 		current_state = new_state
 		current_state.connect('transition', self, 'transition')
 		var res = current_state.enter(owner)
+		var old_state = self.current_state
 		if res is GDScriptFunctionState:
 			res = yield(res, 'completed')
+		# Transition happened between yield points, cancel current transition
+		if old_state != self.current_state:
+			return
 		if not res == current_state:
 			transition(res, false)
 
 	func process(delta: float) -> void:
-		if current_state is DisabledState or disabled:
+		if current_state is DisabledState:
 			return
 		var new_state = current_state.wisp_process(owner, delta)
 		if new_state != current_state:
 			transition(new_state)	
 	func physics_process(delta: float) -> void:
-		if current_state is DisabledState or disabled: 
+		if current_state is DisabledState: 
 			return
 		var new_state = current_state.wisp_physics_process(owner, delta)
 		if new_state != current_state:
 			transition(new_state)
 	func input(event: InputEvent) -> void:
-		if current_state is DisabledState or disabled:
+		if current_state is DisabledState:
 			return
 		var new_state = current_state.wisp_input(owner, event)
 		if new_state is GDScriptFunctionState:
 			new_state = yield(new_state, 'completed')
 		if new_state != current_state:
 			transition(new_state)
+	func unhandled_input(event: InputEvent) -> void:
+		if current_state is DisabledState:
+			return
+		var new_state = current_state.wisp_unhandled_input(owner, event)
+		if new_state is GDScriptFunctionState:
+			new_state = yield(new_state, 'completed')
+		if new_state != current_state:
+			transition(new_state)
 	func debug() -> String:
-		if disabled:
+		if current_state is DisabledState:
 			return "disabled"
 		else:
 			return current_state.name
