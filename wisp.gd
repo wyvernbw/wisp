@@ -87,18 +87,20 @@ class StateMachine:
 	func input(event: InputEvent) -> void:
 		if current_state is DisabledState:
 			return
+		var old_state = current_state
 		var new_state = current_state.wisp_input(owner, event)
 		if new_state is GDScriptFunctionState:
 			new_state = yield(new_state, 'completed')
-		if new_state != current_state:
+		if new_state != current_state and old_state == current_state:
 			transition(new_state)
 	func unhandled_input(event: InputEvent) -> void:
 		if current_state is DisabledState:
 			return
+		var old_state = current_state
 		var new_state = current_state.wisp_unhandled_input(owner, event)
 		if new_state is GDScriptFunctionState:
 			new_state = yield(new_state, 'completed')
-		if new_state != current_state:
+		if new_state != current_state and old_state == current_state:
 			transition(new_state)
 	func debug() -> String:
 		if current_state is DisabledState:
