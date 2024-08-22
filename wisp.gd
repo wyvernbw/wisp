@@ -33,7 +33,7 @@ class StateMachine:
 	var disabled: bool = false
 
 	static func create(new_target: Node, initial_state: State) -> StateMachine:
-		var sm = StateMachine.new(new_target, initial_state)
+		var sm = await StateMachine.new(new_target, initial_state)
 		return sm
 
 	func disable() -> void:
@@ -50,14 +50,24 @@ class StateMachine:
 		current_state = state
 		# current_state.connect('transition', self, 'transition')
 		current_state.transition.connect(self.transition)
-		current_state.enter(target)
+		var old_state = current_state
+		var res = await current_state.enter(target)
+		# res = yield(res, 'completed')
+		# check for transition between await point
+		if not res == current_state and old_state == current_state:
+			transition(res)
 
 	func _init(new_target: Node, state: State) -> void:
 		current_state = state
 		target = new_target
 		# current_state.connect('transition', self, 'transition')
 		current_state.transition.connect(self.transition)
-		current_state.enter(target)
+		var old_state = current_state
+		var res = await current_state.enter(target)
+		# res = yield(res, 'completed')
+		# check for transition between await point
+		if not res == current_state and old_state == current_state:
+			transition(res)
 
 	func transition(new_state: State) -> void:
 		if disabled or current_state == null:
@@ -69,27 +79,29 @@ class StateMachine:
 		# current_state.connect('transition', self, 'transition')
 		current_state.transition.connect(self.transition)
 		state_changed.emit(current_state)
+		var state = current_state
 		var res = await current_state.enter(target)
 		# res = yield(res, 'completed')
-		if not res == current_state:
+		# check for transition between await point
+		if not res == current_state and state == current_state:
 			transition(res)
 
 	func process(delta: float) -> void:
 		if current_state == null:
 			return
-		var new_state = current_state.wisp_process(target, delta)
+		var new_state = current_state.process(target, delta)
 		if new_state != current_state:
 			transition(new_state)	
 	func physics_process(delta: float) -> void:
 		if current_state == null:
 			return
-		var new_state = current_state.wisp_physics_process(target, delta)
+		var new_state = current_state.physics_process(target, delta)
 		if new_state != current_state:
 			transition(new_state)
 	func input(event: InputEvent) -> void:
 		if current_state == null:
 			return
-		var new_state = current_state.wisp_input(target, event)
+		var new_state = current_state.input(target, event)
 		if new_state != current_state:
 			transition(new_state)
 	func debug() -> String:
@@ -99,4 +111,4 @@ class StateMachine:
 			return current_state.name()
 		
 static func use_state_machine(owner: Node, initial_state: State) -> StateMachine:
-	return StateMachine.create(owner, initial_state)
+	return await StateMachine.create(owner, initial_state)
