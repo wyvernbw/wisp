@@ -11,6 +11,8 @@ class State:
 	func exit(owner) -> void:
 		pass
 
+	func guard(owner, current_state: State) -> bool:
+		return true
 	func wisp_process(owner, delta: float) -> State:
 		return self
 	func wisp_physics_process(owner, delta: float) -> State:
@@ -56,6 +58,9 @@ class StateMachine:
 		if use_yield:
 			yield(owner.get_tree(), 'idle_frame')
 		if current_state is DisabledState:
+			return
+		# Guard check
+		if not new_state.guard(owner, current_state):
 			return
 		emit_signal('pretransition', new_state)
 		current_state.disconnect('transition', self, 'transition')
