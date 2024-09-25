@@ -13,6 +13,8 @@ class State:
 
 	func guard(owner, current_state: State) -> bool:
 		return true
+	func exit_guard(owner, next_state: State) -> bool:
+		return true
 	func wisp_process(owner, delta: float) -> State:
 		return self
 	func wisp_physics_process(owner, delta: float) -> State:
@@ -60,7 +62,18 @@ class StateMachine:
 		if current_state is DisabledState:
 			return
 		# Guard check
-		if not new_state.guard(owner, current_state):
+		var old_state = current_state
+		var guard_result = new_state.guard(owner, current_state)
+		var exit_guard_result = current_state.exit_guard(owner, new_state)
+		if guard_result is GDScriptFunctionState:
+			guard_result = yield(guard_result, 'completed')
+		if exit_guard_result is GDScriptFunctionState:
+			exit_guard_result = yield(exit_guard_result, 'completed')
+		if old_state != current_state:
+			return
+		if not guard_result:
+			return
+		if not exit_guard_result:
 			return
 		emit_signal('pretransition', new_state)
 		current_state.disconnect('transition', self, 'transition')
@@ -68,7 +81,7 @@ class StateMachine:
 		current_state = new_state
 		current_state.connect('transition', self, 'transition')
 		var res = current_state.enter(owner)
-		var old_state = self.current_state
+		old_state = self.current_state
 		if res is GDScriptFunctionState:
 			res = yield(res, 'completed')
 		# Transition happened between yield points, cancel current transition
