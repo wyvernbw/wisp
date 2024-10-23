@@ -58,7 +58,7 @@ class StateMachine:
 
 	func transition(new_state: State, use_yield: bool = true) -> void:
 		if use_yield:
-			yield(owner.get_tree(), 'idle_frame')
+			yield (owner.get_tree(), 'idle_frame')
 		if current_state is DisabledState:
 			return
 		# Guard check
@@ -66,9 +66,9 @@ class StateMachine:
 		var guard_result = new_state.guard(owner, current_state)
 		var exit_guard_result = current_state.exit_guard(owner, new_state)
 		if guard_result is GDScriptFunctionState:
-			guard_result = yield(guard_result, 'completed')
+			guard_result = yield (guard_result, 'completed')
 		if exit_guard_result is GDScriptFunctionState:
-			exit_guard_result = yield(exit_guard_result, 'completed')
+			exit_guard_result = yield (exit_guard_result, 'completed')
 		if old_state != current_state:
 			return
 		if not guard_result:
@@ -83,7 +83,7 @@ class StateMachine:
 		var res = current_state.enter(owner)
 		old_state = self.current_state
 		if res is GDScriptFunctionState:
-			res = yield(res, 'completed')
+			res = yield (res, 'completed')
 		# Transition happened between yield points, cancel current transition
 		if old_state != self.current_state:
 			return
@@ -95,29 +95,44 @@ class StateMachine:
 			return
 		var new_state = current_state.wisp_process(owner, delta)
 		if new_state != current_state:
-			transition(new_state)	
+			transition(new_state)
 	func physics_process(delta: float) -> void:
-		if current_state is DisabledState: 
+		if current_state is DisabledState:
 			return
 		var new_state = current_state.wisp_physics_process(owner, delta)
 		if new_state != current_state:
 			transition(new_state)
 	func input(event: InputEvent) -> void:
+		if current_state is Reducer:
+			return
 		if current_state is DisabledState:
 			return
 		var old_state = current_state
 		var new_state = current_state.wisp_input(owner, event)
 		if new_state is GDScriptFunctionState:
-			new_state = yield(new_state, 'completed')
+			new_state = yield (new_state, 'completed')
 		if new_state != current_state and old_state == current_state:
 			transition(new_state)
 	func unhandled_input(event: InputEvent) -> void:
+		if current_state is Reducer:
+			return
 		if current_state is DisabledState:
 			return
 		var old_state = current_state
 		var new_state = current_state.wisp_unhandled_input(owner, event)
 		if new_state is GDScriptFunctionState:
-			new_state = yield(new_state, 'completed')
+			new_state = yield (new_state, 'completed')
+		if new_state != current_state and old_state == current_state:
+			transition(new_state)
+	func handle_command(command: Command) -> void:
+		if current_state is DisabledState:
+			return
+		if not current_state is Reducer:
+			return
+		var old_state = current_state
+		var new_state = current_state.handle_command(owner, command)
+		if new_state is GDScriptFunctionState:
+			new_state = yield (new_state, 'completed')
 		if new_state != current_state and old_state == current_state:
 			transition(new_state)
 	func debug() -> String:
@@ -128,3 +143,19 @@ class StateMachine:
 		
 static func use_state_machine(owner, initial_state: State) -> StateMachine:
 	return StateMachine.create(owner, initial_state)
+
+class Command:
+	extends Resource
+
+	var timestamp: float
+	var id: int
+
+	func _init(id: int) -> void:
+		self.timestamp = OS.get_system_time_msecs()
+		self.id = id
+
+class Reducer:
+	extends State
+
+	func handle_command(entity, command: Command) -> State:
+		return self
