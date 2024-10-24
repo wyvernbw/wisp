@@ -148,11 +148,15 @@ class Command:
 	extends Resource
 
 	var timestamp: float
-	var id: int
+	var id_value: int
 
-	func _init(id: int) -> void:
+	func id() -> int:
+		assert(false, "id function not implemented!")
+		return 0
+
+	func _init() -> void:
 		self.timestamp = OS.get_system_time_msecs()
-		self.id = id
+		self.id_value = id()
 
 class Reducer:
 	extends State
