@@ -3,6 +3,7 @@ class_name Wisp
 extends Node
 
 class State:
+	extends Resource
 	signal transition(state)
 
 	var name = ""
@@ -41,26 +42,21 @@ class StateMachine:
 	func disable() -> void:
 		if current_state is DisabledState:
 			return
-		current_state.disconnect('transition', self, 'transition')
-		current_state.exit(owner)
-		current_state = DisabledState.new()
+		self.transition(DisabledState.new(), false)
 
 	func enable(state: State) -> void:
-		current_state = state
-		current_state.connect('transition', self, 'transition')
-		current_state.enter(owner)
+		self.transition(state, false)
 
 	func _init(new_owner: Node, state: State) -> void:
-		current_state = state
 		owner = new_owner
-		current_state.connect('transition', self, 'transition')
-		current_state.enter(owner)
+		current_state = DisabledState.new()
+		self.transition(state, false)
 
 	func transition(new_state: State, use_yield: bool = true) -> void:
 		if use_yield:
-			yield (owner.get_tree(), 'idle_frame')
-		if current_state is DisabledState:
-			return
+			yield(owner.get_tree(), 'idle_frame')
+		# if current_state is DisabledState:
+		# 	return
 		# Guard check
 		var old_state = current_state
 		var guard_result = new_state.guard(owner, current_state)
