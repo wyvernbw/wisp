@@ -50,6 +50,7 @@ class StateMachine:
 	func _init(new_owner: Node, state: State) -> void:
 		owner = new_owner
 		current_state = DisabledState.new()
+		current_state.connect('transition', self, 'transition')
 		self.transition(state, false)
 
 	func transition(new_state: State, use_yield: bool = true) -> void:
