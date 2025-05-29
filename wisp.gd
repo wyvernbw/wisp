@@ -31,6 +31,7 @@ class DisabledState extends State:
 
 class StateMachine:
 	signal pretransition(new_state)
+	signal post_transition(new_state)
 
 	var current_state: State
 	var owner: Node
@@ -86,6 +87,7 @@ class StateMachine:
 			return
 		if not res == current_state:
 			transition(res, false)
+		emit_signal("post_transition", new_state)
 
 	func process(delta: float) -> void:
 		if current_state is DisabledState:
