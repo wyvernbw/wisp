@@ -19,6 +19,8 @@ class State:
 		return self
 	func input(owner, event: InputEvent) -> State:
 		return self
+	func unhandled_input(owner, event: InputEvent) -> State:
+		return self
 	func use_transition(new_state: State) -> Callable:
 		return func() -> void:
 			transition.emit(new_state)
@@ -102,6 +104,12 @@ class StateMachine:
 		if current_state == null:
 			return
 		var new_state = current_state.input(target, event)
+		if new_state != current_state:
+			transition(new_state)
+	func unhandled_input(event: InputEvent) -> void:
+		if current_state == null:
+			return
+		var new_state = current_state.unhandled_input(target, event)
 		if new_state != current_state:
 			transition(new_state)
 	func debug() -> String:
