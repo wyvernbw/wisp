@@ -3,9 +3,11 @@ class_name Wisp
 extends Node
 
 class State:
-	extends RefCounted
+	extends Resource
 
 	signal transition(state)
+
+	var valid := false
 
 	func name() -> String:
 		return "unnamed"
@@ -13,6 +15,10 @@ class State:
 		return self
 	func exit(owner) -> void:
 		pass
+	func guard(owner, current_state: State) -> bool:
+		return true
+	func exit_guard(owner, next_state: State) -> bool:
+		return true
 	func process(owner, delta: float) -> State:
 		return self
 	func physics_process(owner, delta: float) -> State:
@@ -25,10 +31,15 @@ class State:
 		return func() -> void:
 			transition.emit(new_state)
 
+class DisabledState extends State:
+	func name() -> String:
+		return "Disabled"
+
 class StateMachine:
-	extends Node
+	extends Resource
 
 	signal state_changed(state)
+	signal pretransition(state)
 
 	var current_state: State
 	var target: Node
@@ -39,54 +50,46 @@ class StateMachine:
 		return sm
 
 	func disable() -> void:
-		if current_state == null:
+		if current_state is DisabledState:
 			return
-		# current_state.disconnect('transition', self, 'transition')
-		current_state.transition.disconnect(self.transition)
-		current_state.exit(target)
-		current_state = null
-		disabled = true
+		self.transition(DisabledState.new(), false)
 
 	func enable(state: State) -> void:
-		disabled = false
-		current_state = state
-		# current_state.connect('transition', self, 'transition')
-		current_state.transition.connect(self.transition)
-		var old_state = current_state
-		var res = await current_state.enter(target)
-		# res = yield(res, 'completed')
-		# check for transition between await point
-		if not res == current_state and old_state == current_state:
-			transition(res)
+		self.transition(state)
 
 	func _init(new_target: Node, state: State) -> void:
-		current_state = state
-		target = new_target
-		# current_state.connect('transition', self, 'transition')
-		current_state.transition.connect(self.transition)
-		var old_state = current_state
-		var res = await current_state.enter(target)
-		# res = yield(res, 'completed')
-		# check for transition between await point
-		if not res == current_state and old_state == current_state:
-			transition(res)
+		self.target = new_target
+		self.current_state = DisabledState.new()
+		self.current_state.connect('transition', self, 'transition')
+		self.transition(state, false)
 
-	func transition(new_state: State) -> void:
-		if disabled or current_state == null:
+	func transition(new_state: State, use_yield := true) -> void:
+		if use_yield:
+			yield(owner.get_tree(), 'idle_frame')
+		var old_state = self.current_state
+		var guard_result = await new_state.guard(self.owner, self.current_state)
+		var exit_guard_result = await new_state.exit_guard(self.owner, self.current_state)
+		# transition happend while waiting
+		if old_state != self.current_state:
 			return
+		if not (guard_result and exit_guard_result):
+			return
+		self.pretransition.emit(new_state)
 		# current_state.disconnect('transition', self, 'transition')
 		current_state.transition.disconnect(self.transition)
 		current_state.exit(target)
+		current_state.valid = false
 		current_state = new_state
 		# current_state.connect('transition', self, 'transition')
 		current_state.transition.connect(self.transition)
 		state_changed.emit(current_state)
-		var state = current_state
+		var new_current_state = current_state
 		var res = await current_state.enter(target)
-		# res = yield(res, 'completed')
-		# check for transition between await point
-		if not res == current_state and state == current_state:
-			transition(res)
+		# transition happend while waiting
+		if new_current_state != self.current_state:
+			return
+		if not res == self.current_state:
+			self.transition(res, false)
 
 	func process(delta: float) -> void:
 		if current_state == null:
@@ -113,7 +116,7 @@ class StateMachine:
 		if new_state != current_state:
 			transition(new_state)
 	func debug() -> String:
-		if disabled:
+		if current_state is DisabledState:
 			return "disabled"
 		else:
 			return current_state.name()
