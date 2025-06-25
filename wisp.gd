@@ -7,6 +7,8 @@ class State:
 	signal transition(state)
 
 	var name = ""
+	var valid := false
+
 	func enter(owner) -> Wisp.State:
 		return self
 	func exit(owner) -> void:
@@ -24,6 +26,8 @@ class State:
 		return self
 	func wisp_unhandled_input(owner, event: InputEvent) -> State:
 		return self
+	func is_valid() -> bool:
+		return valid
 
 class DisabledState extends State:
 	func _init():
@@ -76,8 +80,10 @@ class StateMachine:
 		emit_signal('pretransition', new_state)
 		current_state.disconnect('transition', self, 'transition')
 		current_state.exit(owner)
+		current_state.valid = false
 		current_state = new_state
 		current_state.connect('transition', self, 'transition')
+		current_state.valid = true
 		var new_current_state = self.current_state
 		var res = current_state.enter(owner)
 		if res is GDScriptFunctionState:
