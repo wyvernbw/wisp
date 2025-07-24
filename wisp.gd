@@ -6,7 +6,9 @@ class State:
 	extends Resource
 	signal transition(state)
 
-	var name = ""
+	func name() -> String:
+		return "Unnamed"
+	
 	var valid := false
 
 	func enter(owner) -> Wisp.State:
@@ -30,8 +32,6 @@ class State:
 		return valid
 
 class DisabledState extends State:
-	func _init():
-		name = "Disabled"
 
 class StateMachine:
 	signal pretransition(new_state)
@@ -149,7 +149,7 @@ class StateMachine:
 		if current_state is DisabledState:
 			return "disabled"
 		else:
-			return current_state.name
+			return current_state.name()
 		
 static func use_state_machine(owner, initial_state: State) -> StateMachine:
 	return StateMachine.create(owner, initial_state)
