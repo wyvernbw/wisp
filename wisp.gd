@@ -32,6 +32,8 @@ class State:
 		return valid
 
 class DisabledState extends State:
+	func name() -> String:
+		return "Disabled"
 
 class StateMachine:
 	signal pretransition(new_state)
