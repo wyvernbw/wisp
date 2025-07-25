@@ -181,6 +181,9 @@ class StateMachine:
 		if current_state is DisabledState:
 			return
 		var new_state = current_state.wisp_process(owner, delta)
+		if current_state is Reducer:
+			assert(new_state == null, "returned state from reducer process function. this transition is ignored.")
+			return
 		if new_state != current_state:
 			transition(new_state)
 
@@ -188,34 +191,39 @@ class StateMachine:
 		if current_state is DisabledState:
 			return
 		var new_state = current_state.wisp_physics_process(owner, delta)
+		if current_state is Reducer:
+			assert(new_state == null, "returned state from reducer physics_process function. this transition is ignored.")
+			return
 		if new_state != current_state:
 			transition(new_state)
 
 	func input(event: InputEvent) -> void:
-		if current_state is Reducer:
-			return
 		if current_state is DisabledState:
 			return
 		var old_state = current_state
 		var new_state = current_state.wisp_input(owner, event)
 		if new_state is GDScriptFunctionState:
 			new_state = yield (new_state, 'completed')
+		if current_state is Reducer:
+			assert(new_state == null, "returned state from reducer input function. this transition is ignored.")
+			return
 		if new_state != current_state and old_state == current_state:
 			transition(new_state)
 
 	func unhandled_input(event: InputEvent) -> void:
-		if current_state is Reducer:
-			return
 		if current_state is DisabledState:
 			return
 		var old_state = current_state
 		var new_state = current_state.wisp_unhandled_input(owner, event)
 		if new_state is GDScriptFunctionState:
 			new_state = yield (new_state, 'completed')
+		if current_state is Reducer:
+			assert(new_state == null, "returned state from reducer unhandled_input function. this transition is ignored.")
+			return
 		if new_state != current_state and old_state == current_state:
 			transition(new_state)
 
-	func handle_command(command: Command) -> void:
+	func handle_command(command: int) -> void:
 		if current_state is DisabledState:
 			return
 		if not current_state is Reducer:
@@ -240,24 +248,10 @@ class StateMachine:
 static func use_state_machine(owner, initial_state: State) -> StateMachine:
 	return StateMachine.create(owner, initial_state)
 
-class Command:
-	extends Resource
-
-	var timestamp: float
-	var id_value: int
-
-	func id() -> int:
-		assert(false, "id function not implemented!")
-		return 0
-
-	func _init() -> void:
-		self.timestamp = OS.get_system_time_msecs()
-		self.id_value = id()
-
 class Reducer:
 	extends State
 
-	func handle_command(entity, command: Command) -> State:
+	func handle_command(entity, command: int) -> State:
 		return self
 
 class WispSelector:
