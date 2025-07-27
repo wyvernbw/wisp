@@ -27,6 +27,11 @@ class State:
 		self.emit_signal("new_effect", id)
 		return self
 
+	func send_effect_after(id: int, promise: GDScriptFunctionState) -> State:
+		yield(promise, "completed")
+		self.send_effect(id)
+		return self
+
 	func poll_effect(id: int, value: bool) -> bool:
 		if self.current_effect != -1:
 			if self.current_effect == id:
