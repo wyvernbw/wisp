@@ -10,8 +10,13 @@ class State:
 	func name() -> String:
 		return "Unnamed"
 	
+	var propagating_from: State = null
 	var valid := false
 	var current_effect := -1
+
+	func propagate(state: State) -> State:
+		state.propagating_from = self
+		return state
 
 	func consume_effect() -> State:
 		current_effect = -1
@@ -114,6 +119,8 @@ class State:
 	func wisp_unhandled_input(owner, event: InputEvent) -> State:
 		return self
 	func is_valid() -> bool:
+		if self.propagating_from:
+			return self.propagating_from.is_valid()
 		return valid
 
 class DisabledState extends State:
